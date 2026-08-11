@@ -195,7 +195,21 @@ npm install -g vercel
 vercel
 ```
 
+### Step 5: Deploying to Netlify (Serverless)
+
+SafeGuard AI is pre-configured for **1-click Netlify Deployment**:
+
+1. Log in to [Netlify](https://app.netlify.com).
+2. Click **"Add new site"** -> **"Import an existing project"**.
+3. Select **GitHub** and authorize access to `karthikeyadoddapaneni/scam-det`.
+4. Netlify will automatically detect `netlify.toml` settings:
+   - **Publish directory**: `public`
+   - **Functions directory**: `netlify/functions`
+5. Click **"Deploy scam-det"**. Your web app and Python API functions will go live immediately!
+
 ---
+
+
 
 ## 10. Limitations
 
