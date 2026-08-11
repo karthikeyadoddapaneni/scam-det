@@ -2,6 +2,9 @@
 .gitignore
 tests/
 notebooks/
+results/
+app.py
+requirements-local.txt
 *.db
 __pycache__/
 *.pyc
