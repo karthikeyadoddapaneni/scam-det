@@ -191,3 +191,5 @@ Open your browser at `http://localhost:8501`.
 2. **Deep Explainability**: Integrate SHAP (SHapley Additive exPlanations) or LIME for token-level saliency heatmaps.
 3. **Live Threat Intelligence Integration**: Connect real-time threat feeds via API keys for AbuseIPDB and VirusTotal.
 4. **Multilingual Support**: Extend tokenizers to handle regional languages and code-switched scripts.
+#   s c a m - d e t e c t i o n  
+ 
