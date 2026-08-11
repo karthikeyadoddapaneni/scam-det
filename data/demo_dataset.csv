@@ -105,3 +105,24 @@ text,categories
 "Official portal https://www.india.gov.in",SAFE
 "Check weather report on https://weather.com",SAFE
 "Here is the recipe link https://allrecipes.com",SAFE
+"17ebook.com",SCAM|PHISHING
+"17ebook",SCAM|PHISHING
+"http://17ebook.com/",SCAM|PHISHING
+"http://free-pdf-download.xyz",SCAM|PHISHING
+"http://modapk-download.top",SCAM|PHISHING
+"http://sbi-kyc-verify.online",PHISHING|CREDENTIAL_THEFT
+"http://hdfc-netbank-alert.site",PHISHING|CREDENTIAL_THEFT
+"http://paypal-resolution-center.info",PHISHING|CREDENTIAL_THEFT
+"http://netflix-billing-fix.xyz",PHISHING|CREDENTIAL_THEFT
+"http://apple-id-verify.co.site",PHISHING|CREDENTIAL_THEFT
+"http://paytm-cashback-claim.info",SCAM|PHISHING
+"http://kbc-lottery-winner.net",SCAM|INVESTMENT_SCAM
+"http://crypto-double-btc.online",INVESTMENT_SCAM|SCAM
+"http://telegram-task-earn.click",JOB_SCAM|SCAM
+"https://google.com",SAFE
+"https://youtube.com",SAFE
+"https://github.com",SAFE
+"https://wikipedia.org",SAFE
+"https://amazon.com",SAFE
+"https://microsoft.com",SAFE
+"https://apple.com",SAFE

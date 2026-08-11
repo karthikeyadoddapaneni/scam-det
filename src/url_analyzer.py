@@ -7,12 +7,30 @@ import socket
 from urllib.parse import urlparse
 from typing import List, Dict, Any
 
-URL_REGEX = r"https?://[^\s<>\"']+|www\.[^\s<>\"']+"
-SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly", "cutt.ly"}
-SUSPICIOUS_TLDS = {".xyz", ".top", ".ml", ".info", ".site", ".online", ".ru", ".cc", ".work", ".click", ".tk", ".biz", ".download", ".link", ".live", ".store", ".asia", ".club", ".space"}
-SUSPICIOUS_KEYWORDS = {"login", "verify", "secure", "update", "bank", "account", "netbanking", "billing", "confirm", "signin", "support", "auth", "password", "credential"}
-SKETCHY_DOMAIN_KEYWORDS = {"ebook", "warez", "crack", "keygen", "modapk", "torrent", "freepdf", "freebook", "123movies", "streaming", "cheat", "hack", "nulled", "unlocked", "roms", "emulator", "paytm", "gpay", "phonepe", "cashback", "bonus", "airdrop", "crypto", "recharge", "spinwin", "scratchcard", "giftcard", "freestuff", "unclaimed"}
+URL_REGEX = r"(?:https?://|www\.)[^\s<>\"']+|\b[a-zA-Z0-9-]+\.(?:com|org|net|info|xyz|top|site|online|ru|cc|work|click|tk|apk|exe|app|in|io|co|me|store|live|cfd|sbs|monster|bid|win|quest|icu|buzz)\b(?:/[^\s<>\"']*)?"
+
+SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly", "cutt.ly", "rb.gy", "shorturl.at"}
+SUSPICIOUS_TLDS = {".xyz", ".top", ".ml", ".info", ".site", ".online", ".ru", ".cc", ".work", ".click", ".tk", ".biz", ".download", ".link", ".live", ".store", ".asia", ".club", ".space", ".monster", ".fit", ".rest", ".shop", ".beauty", ".hair", ".quest", ".icu", ".buzz", ".win", ".bid", ".life", ".cfd", ".sbs", ".best", ".cam", ".cyou", ".fun", ".uno", ".vip", ".wang"}
+SUSPICIOUS_KEYWORDS = {"login", "verify", "secure", "update", "bank", "account", "netbanking", "billing", "confirm", "signin", "support", "auth", "password", "credential", "reset", "kyc"}
+SKETCHY_DOMAIN_KEYWORDS = {
+    "ebook", "warez", "crack", "keygen", "modapk", "torrent", "freepdf", "freebook", "123movies", 
+    "streaming", "cheat", "hack", "nulled", "unlocked", "roms", "emulator", "paytm", "gpay", 
+    "phonepe", "cashback", "bonus", "airdrop", "crypto", "recharge", "spinwin", "scratchcard", 
+    "giftcard", "freestuff", "unclaimed", "libgen", "pdfdrive", "oceanofpdf", "apkmody", "an1", 
+    "happymod", "rexdl", "revdl", "fitgirl", "getintopc", "sbi-kyc", "hdfc-netbank", "icici-reward", 
+    "paypal-verify", "netflix-billing", "apple-id-verify", "kbc-lottery", "double-btc"
+}
 MALWARE_EXTENSIONS = {".exe", ".apk", ".scr", ".bat", ".vbs", ".zip", ".msi", ".jar", ".ps1", ".cmd", ".dll", ".rar", ".iso", ".img", ".7z", ".sh", ".dmg", ".bin", ".elf"}
+
+# Global Top Trusted Domains Whitelist
+TRUSTED_GLOBAL_DOMAINS = {
+    "google.com", "www.google.com", "youtube.com", "www.youtube.com", "facebook.com", "instagram.com",
+    "wikipedia.org", "en.wikipedia.org", "github.com", "microsoft.com", "apple.com", "amazon.com",
+    "linkedin.com", "twitter.com", "x.com", "netflix.com", "reddit.com", "yahoo.com", "bing.com",
+    "duckduckgo.com", "cloudflare.com", "gov.in", "india.gov.in", "usa.gov", "bbc.com", "cnn.com",
+    "nytimes.com", "chatgpt.com", "openai.com", "stackoverflow.com", "medium.com", "adobe.com",
+    "zoom.us", "dropbox.com", "quora.com", "spotify.com", "whatsapp.com", "telegram.org"
+}
 
 # Known parked or adware/malware hosting IP networks
 SUSPICIOUS_IP_PREFIXES = ("208.91.112.", "192.168.", "10.", "127.0.0.1", "0.0.0.0")
@@ -21,24 +39,33 @@ SUSPICIOUS_IP_PREFIXES = ("208.91.112.", "192.168.", "10.", "127.0.0.1", "0.0.0.
 def analyze_urls_in_text(text: str) -> List[Dict[str, Any]]:
     """
     Extracts and evaluates static and DNS indicators of URLs embedded in input text.
-    Operates offline/lightweight with fast 1-second DNS resolution checks.
+    Includes global domain whitelist checking to prevent false positives on legitimate services.
     """
     raw_urls = re.findall(URL_REGEX, text)
     results = []
+    seen_urls = set()
     
     for url in raw_urls:
+        if url in seen_urls:
+            continue
+        seen_urls.add(url)
+
         parsed = urlparse(url if url.startswith("http") else "http://" + url)
-        domain = parsed.netloc.lower()
+        domain = parsed.netloc.lower() or parsed.path.split("/")[0].lower()
         path = parsed.path.lower()
         full_path_query = (parsed.path + "?" + parsed.query).lower()
         
         # Clean port if present in domain string
         clean_domain = domain.split(":")[0]
         
+        # Extract registered main domain (e.g. google.com from sub.google.com)
+        domain_parts = clean_domain.split(".")
+        main_domain = ".".join(domain_parts[-2:]) if len(domain_parts) >= 2 else clean_domain
+
         indicators = []
         risk_weight = 0.0
         threat_tags = []
-        
+
         # 1. Malware Executable Payload Check
         has_malware_ext = any(full_path_query.endswith(ext) or f"{ext}?" in full_path_query or f"{ext}&" in full_path_query for ext in MALWARE_EXTENSIONS)
         if has_malware_ext:
@@ -46,54 +73,73 @@ def analyze_urls_in_text(text: str) -> List[Dict[str, Any]]:
             risk_weight += 4.0
             threat_tags.append("MALWARE_PAYLOAD")
 
-        # 2. IP-based Domain Check
+        # 2. Check Whitelist for Recognized Trusted Global Domain
+        if (clean_domain in TRUSTED_GLOBAL_DOMAINS or main_domain in TRUSTED_GLOBAL_DOMAINS) and not has_malware_ext:
+            results.append({
+                "url": url,
+                "domain": clean_domain,
+                "resolved_ip": None,
+                "is_https": parsed.scheme.lower() == "https",
+                "is_ip": False,
+                "is_shortened": False,
+                "has_malware_ext": False,
+                "indicators": [],
+                "suspicious_count": 0,
+                "risk_weight": 0.0,
+                "threat_tags": ["TRUSTED_WHITELIST"],
+                "suspicious": False,
+                "assessment": "Verified legitimate domain"
+            })
+            continue
+
+        # 3. IP-based Domain Check
         is_ip = bool(re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", clean_domain))
         if is_ip:
             indicators.append("IP-address-based URL host detected instead of standard domain name")
             risk_weight += 3.5
             threat_tags.append("IP_HOST")
 
-        # 3. Sketchy Domain Keyword Check (e.g. 17ebook, freepdf, modapk, torrent, paytm-bonus)
+        # 4. Sketchy Domain Keyword Check (e.g. 17ebook, freepdf, modapk, torrent, paytm-bonus)
         found_domain_kw = [kw for kw in SKETCHY_DOMAIN_KEYWORDS if kw in clean_domain]
         if found_domain_kw:
             indicators.append(f"Domain name contains high-risk piracy/untrusted keywords: {', '.join(found_domain_kw)}")
-            risk_weight += 2.5
+            risk_weight += 3.0
             threat_tags.append("SKETCHY_DOMAIN_KEYWORD")
 
-        # 4. Digit-Prefixed/Suffixed Domain Structure (e.g., 17ebook, 99bet, 123movies)
+        # 5. Digit-Prefixed/Suffixed Domain Structure (e.g., 17ebook, 99bet, 123movies)
         if re.search(r"^\d+[a-z]{3,}", clean_domain) or re.search(r"[a-z]{3,}\d+\.[a-z]+$", clean_domain):
             indicators.append("Digit-prefixed/suffixed domain structure commonly used in spam & piracy mirrors")
-            risk_weight += 2.0
+            risk_weight += 2.5
             threat_tags.append("NUMERIC_DOMAIN_SPOOF")
 
-        # 5. Suspicious Path & Credential Keywords
+        # 6. Suspicious Path & Credential Keywords
         found_path_kw = [kw for kw in SUSPICIOUS_KEYWORDS if kw in path or kw in clean_domain]
         if found_path_kw:
             indicators.append(f"Contains credential/banking keywords: {', '.join(found_path_kw)}")
             risk_weight += 2.5
             threat_tags.append("CREDENTIAL_PHISHING")
 
-        # 6. Suspicious TLD Check
+        # 7. Suspicious TLD Check
         has_suspicious_tld = any(clean_domain.endswith(tld) for tld in SUSPICIOUS_TLDS)
         if has_suspicious_tld:
             indicators.append("Uses non-standard/high-risk Top Level Domain (TLD)")
-            risk_weight += 2.0
+            risk_weight += 2.2
             threat_tags.append("HIGH_RISK_TLD")
 
-        # 7. URL Shortener Check
+        # 8. URL Shortener Check
         is_shortened = any(s in clean_domain for s in SHORTENERS)
         if is_shortened:
             indicators.append("URL shortening service used (masks real target destination)")
-            risk_weight += 1.5
+            risk_weight += 1.8
             threat_tags.append("URL_SHORTENER")
 
-        # 8. Scheme Check
+        # 9. Scheme Check
         is_https = parsed.scheme.lower() == "https"
         if not is_https:
             indicators.append("Uses unencrypted HTTP protocol instead of HTTPS")
             risk_weight += 1.5
             
-        # 9. Live DNS Host & Parking IP Check
+        # 10. Live DNS Host & Parking IP Check
         resolved_ip = None
         if not is_ip:
             try:
@@ -106,13 +152,12 @@ def analyze_urls_in_text(text: str) -> List[Dict[str, Any]]:
             except Exception:
                 pass # Non-fatal DNS lookup failure
 
-        # 10. Subdomain Count Check
-        subdomain_parts = clean_domain.split(".")
-        if len(subdomain_parts) > 3 and not is_ip:
-            indicators.append(f"High number of subdomains detected ({len(subdomain_parts)} parts)")
+        # 11. Subdomain Count Check
+        if len(domain_parts) > 3 and not is_ip:
+            indicators.append(f"High number of subdomains detected ({len(domain_parts)} parts)")
             risk_weight += 1.0
             
-        # 11. Length Check
+        # 12. Length Check
         if len(url) > 75:
             indicators.append(f"Excessive URL length ({len(url)} characters)")
             risk_weight += 0.5
