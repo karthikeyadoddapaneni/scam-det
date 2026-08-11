@@ -80,6 +80,7 @@ class SafeguardPredictor:
         url_risk_weight_sum = 0.0
         has_malware_url = False
         has_phishing_url = False
+        has_suspicious_url = False
 
         for url_info in url_analysis:
             risk_w = url_info.get("risk_weight", 0.0)
@@ -97,6 +98,11 @@ class SafeguardPredictor:
                 
             if "HIGH_RISK_TLD" in url_info.get("threat_tags", []) or "URL_SHORTENER" in url_info.get("threat_tags", []):
                 ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.65)
+
+            if "SKETCHY_DOMAIN_KEYWORD" in url_info.get("threat_tags", []) or "NUMERIC_DOMAIN_SPOOF" in url_info.get("threat_tags", []) or "PARKED_SUSPICIOUS_IP" in url_info.get("threat_tags", []):
+                has_suspicious_url = True
+                ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.85)
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.75)
 
         # 4. Heuristic Indicator Detection
         indicators = extract_heuristic_indicators(text)
@@ -187,7 +193,7 @@ class SafeguardPredictor:
             elif primary_cat in ["SCAM", "INVESTMENT_SCAM", "JOB_SCAM"]:
                 severity_bonus = 15.0
 
-            if has_malware_url or has_phishing_url:
+            if has_malware_url or has_phishing_url or has_suspicious_url:
                 severity_bonus += 20.0
                 
             raw_risk = base_risk + indicator_bonus + severity_bonus
