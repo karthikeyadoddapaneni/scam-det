@@ -649,8 +649,13 @@ def analyze_endpoint():
 
         # Check reputation for embedded URLs
         for url_info in url_results:
-            rep = threat_intel.check_url_reputation(url_info["url"])
-            url_info["threat_reputation"] = rep
+            try:
+                rep = threat_intel.check_url_reputation(url_info["url"])
+                url_info["threat_reputation"] = rep
+            except Exception as rep_err:
+                print(f"Non-fatal reputation check warning: {rep_err}")
+                url_info["threat_reputation"] = {"status": "UNAVAILABLE", "is_malicious": False}
+
 
         result["url_analysis"] = url_results
 

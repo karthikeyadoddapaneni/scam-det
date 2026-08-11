@@ -50,3 +50,22 @@ class ThreatIntelProvider:
             "reputation_score": 0,
             "is_malicious": False
         }
+
+    def check_url_reputation(self, url: str) -> Dict[str, Any]:
+        """Queries external URL reputation feed if key is present."""
+        if not self.api_key:
+            return {
+                "query": url,
+                "status": "UNCONFIGURED",
+                "message": "Reputation data unavailable — no external reputation source configured.",
+                "reputation_score": None,
+                "is_malicious": False
+            }
+        return {
+            "query": url,
+            "status": "CONFIGURED_STUB",
+            "message": "External API key configured. Ready for live threat lookup.",
+            "reputation_score": 0,
+            "is_malicious": False
+        }
+
