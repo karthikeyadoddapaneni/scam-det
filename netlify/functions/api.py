@@ -5,17 +5,27 @@ SafeGuard AI — Netlify Python Serverless Function Handler
 import os
 import sys
 import json
+import traceback
 
-# Add project root directory to sys.path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+# Resolve project root & Lambda task directories
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+parent_root = os.path.abspath(os.path.join(curr_dir, "..", ".."))
 
-from src.predict import SafeguardPredictor
-from src.explain import generate_explanation
-from src.url_analyzer import analyze_urls_in_text
-from src.reputation import ThreatIntelProvider
-from src.recommendations import get_safety_recommendations
+for p in [parent_root, "/var/task", curr_dir]:
+    if os.path.exists(p) and p not in sys.path:
+        sys.path.insert(0, p)
+
+try:
+    from src.predict import SafeguardPredictor
+    from src.explain import generate_explanation
+    from src.url_analyzer import analyze_urls_in_text
+    from src.reputation import ThreatIntelProvider
+    from src.recommendations import get_safety_recommendations
+    IMPORT_SUCCESS = True
+    IMPORT_ERROR = None
+except Exception as imp_err:
+    IMPORT_SUCCESS = False
+    IMPORT_ERROR = f"{imp_err}\n{traceback.format_exc()}"
 
 # Predictor singleton
 predictor = None
@@ -36,11 +46,7 @@ def handler(event, context):
     }
 
     if http_method == "OPTIONS":
-        return {
-            "statusCode": 200,
-            "headers": headers,
-            "body": ""
-        }
+        return {"statusCode": 200, "headers": headers, "body": ""}
 
     if "health" in path:
         return {
@@ -49,7 +55,19 @@ def handler(event, context):
             "body": json.dumps({
                 "status": "online",
                 "system": "SafeGuard AI",
-                "platform": "Netlify Serverless Functions"
+                "platform": "Netlify Serverless Functions",
+                "import_status": IMPORT_SUCCESS,
+                "import_error": IMPORT_ERROR
+            })
+        }
+
+    if not IMPORT_SUCCESS:
+        return {
+            "statusCode": 500,
+            "headers": headers,
+            "body": json.dumps({
+                "status": "error",
+                "message": f"Module import failed: {IMPORT_ERROR}"
             })
         }
 
@@ -80,7 +98,7 @@ def handler(event, context):
             for url_info in url_results:
                 try:
                     url_info["threat_reputation"] = threat_intel.check_url_reputation(url_info["url"])
-                except Exception as rep_err:
+                except Exception:
                     url_info["threat_reputation"] = {"status": "UNAVAILABLE", "is_malicious": False}
 
             result["url_analysis"] = url_results
@@ -99,12 +117,14 @@ def handler(event, context):
             }
 
         except Exception as e:
+            tb_str = traceback.format_exc()
+            print(f"Netlify Function error: {e}\n{tb_str}")
             return {
                 "statusCode": 500,
                 "headers": headers,
                 "body": json.dumps({
                     "status": "error",
-                    "message": str(e)
+                    "message": f"{str(e)} — Details: {tb_str[:250]}"
                 })
             }
 
