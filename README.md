@@ -169,11 +169,31 @@ python src/train.py
 python -m unittest tests/test_pipeline.py
 ```
 
-### Step 3: Launch Streamlit Web App
+### Step 3: Launch Streamlit Web App (Local)
 ```bash
 streamlit run app.py
 ```
 Open your browser at `http://localhost:8501`.
+
+### Step 4: Deploying to Vercel (Serverless)
+
+SafeGuard AI is pre-configured for **1-click Vercel Deployment** using `@vercel/python` serverless functions:
+
+1. Push your repository to GitHub:
+   ```bash
+   git add .
+   git commit -m "Configure Vercel deployment"
+   git push origin main
+   ```
+2. Log in to [Vercel](https://vercel.com) and click **"Add New Project"**.
+3. Import your `scam-det` repository.
+4. Leave the root directory as `./` and click **"Deploy"**. Vercel will automatically build the `@vercel/python` app using `vercel.json` and `api/index.py`.
+
+Alternatively, deploy via **Vercel CLI**:
+```bash
+npm install -g vercel
+vercel
+```
 
 ---
 
