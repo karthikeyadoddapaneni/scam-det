@@ -92,6 +92,34 @@ INDICATOR_RULES = [
         "regex": r"(bit\.ly|tinyurl|\.xyz|\.top|\.ml|\.info|\.site|\.online|\.ru|\.cc|\.work|\.click|\.tk|\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b|http://|\.exe|\.apk|\.scr|\.bat|\.vbs|\.zip|\.msi)",
         "weight": 2.0,
         "explanation": "Contains links pointing to unverified, shortened, unencrypted HTTP, or non-standard domains."
+    },
+    {
+        "id": "DIGITAL_ARREST_LEGAL",
+        "name": "Digital Arrest & Fake Police Threat",
+        "regex": r"\b(digital arrest|cyber crime bureau|supreme court warrant|money laundering accused|cbi officer|police inspector|keep camera on|rbi verification account)\b",
+        "weight": 3.2,
+        "explanation": "Scammers impersonating law enforcement officers threatening digital arrest or fake warrants."
+    },
+    {
+        "id": "HIGH_RISK_PHONE_COUNTRY",
+        "name": "High-Risk Fraud Phone Number / Call",
+        "regex": r"(\+92|\+234|\+254|\+63|\+994|1800[- ]\d{3}[- ]\d{4})",
+        "weight": 2.8,
+        "explanation": "Contains phone number formatting associated with international Telegram/WhatsApp scam syndicates or fake customer care numbers."
+    },
+    {
+        "id": "QR_PAYMENT_RECEIVE_SCAM",
+        "name": "QR Code Payment Receive Trick",
+        "regex": r"\b(scan qr to receive|scan code to accept|scan qr for refund|scan qr code to get money|scan code to debit|scan to collect)\b",
+        "weight": 3.0,
+        "explanation": "Tricks victim into scanning a payment QR code under false claim of receiving money (QR scanning only debits money)."
+    },
+    {
+        "id": "DOUBLE_FILE_EXT_MALWARE",
+        "name": "Malware Attachment / Double Extension",
+        "regex": r"\b(\w+\.pdf\.exe|\w+\.doc\.vbs|\w+\.jpg\.apk|\w+\.zip\.scr|\w+\.invoice\.exe|\w+\.statement\.apk|\.exe|\.apk|\.scr|\.bat|\.vbs)\b",
+        "weight": 3.5,
+        "explanation": "Disguised executable malware attachment or Android Trojan package."
     }
 ]
 

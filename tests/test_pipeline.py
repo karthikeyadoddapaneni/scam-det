@@ -58,6 +58,27 @@ class TestSafeguardPipeline(unittest.TestCase):
         self.assertEqual(res["risk_score"], 0)
         self.assertEqual(res["predicted_categories"][0]["category"], "SAFE")
 
+    def test_digital_arrest_detection(self):
+        predictor = SafeguardPredictor()
+        msg = "NOTICE: You are under Digital Arrest by Cyber Crime Bureau. Keep camera ON and pay ₹1,00,000 bail fee."
+        res = predictor.predict(msg)
+        self.assertGreaterEqual(res["risk_score"], 80)
+        self.assertNotEqual(res["predicted_categories"][0]["category"], "SAFE")
+
+    def test_high_risk_phone_number(self):
+        predictor = SafeguardPredictor()
+        msg = "WhatsApp call from Unknown Number +92 312 8472910 claiming to be Police Inspector."
+        res = predictor.predict(msg)
+        self.assertGreaterEqual(res["risk_score"], 70)
+        self.assertNotEqual(res["predicted_categories"][0]["category"], "SAFE")
+
+    def test_qr_payment_scam(self):
+        predictor = SafeguardPredictor()
+        msg = "Scan this QR code to receive ₹10,000 refund in your Google Pay account immediately."
+        res = predictor.predict(msg)
+        self.assertGreaterEqual(res["risk_score"], 75)
+        self.assertNotEqual(res["predicted_categories"][0]["category"], "SAFE")
+
     def test_database_logging(self):
         test_db = "test_safeguard_temp.db"
         if os.path.exists(test_db):

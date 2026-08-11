@@ -75,3 +75,33 @@ text,categories
 "Read more on Wikipedia https://en.wikipedia.org/wiki/Main_Page",SAFE
 "You can search for it on https://bing.com",SAFE
 "Watch the video tutorial at https://youtube.com",SAFE
+"Free ebook download portal http://17ebook.com/",SCAM|PHISHING
+"Download free unlocked PDF book http://free-pdf-downloads.info",SCAM|PHISHING
+"Download unlocked game MOD APK http://modapk-unlocked.xyz",SCAM|PHISHING
+"Download free cracked software patch http://crack-keygens.online/setup.exe",PHISHING|SCAM
+"Download torrent file http://pirate-torrents.site/movie.rar.exe",PHISHING|SCAM
+"Click to claim cashback bonus http://paytm-bonus-reward.info",SCAM|PHISHING
+"Spin wheel to win iPhone 15 Pro http://free-rewards-claim.xyz",SCAM
+"Call +92 300 9283741 immediately to claim your KBC lottery 25 Lakh prize.",SCAM|FINANCIAL_COERCION
+"Urgent call from Customs Office +234 803 123456. Pay clearance fee for your parcel.",SCAM|PHISHING
+"WhatsApp call from Unknown Number +92 312 8472910 claiming to be Police Inspector.",THREAT|SCAM
+"Official Customer Care Number 1800-891-9921 for SBI netbanking support.",PHISHING|CREDENTIAL_THEFT
+"I am calling from Telecom Authority. Your SIM will be deactivated in 2 hours.",PHISHING|FINANCIAL_COERCION
+"NOTICE: You are under Digital Arrest by Cyber Crime Bureau. Keep camera ON and pay ₹1,00,000 bail fee.",THREAT|FINANCIAL_COERCION|BLACKMAIL
+"Supreme Court Warrant: You are accused of money laundering. Transfer funds to RBI verification account.",THREAT|FINANCIAL_COERCION|SCAM
+"Electricity Department: Power supply will be disconnected at 9:30 PM due to unpaid bill. Pay now.",FINANCIAL_COERCION|SCAM
+"Scan this QR code to receive ₹10,000 refund in your Google Pay account immediately.",SCAM|CREDENTIAL_THEFT
+"I have sent money to your account via QR code. Scan code to accept funds.",SCAM|CREDENTIAL_THEFT
+"Fake payment receipt screenshot showing ₹50,000 transferred to your Shop account.",SCAM
+"Please review attached invoice_doc.pdf.exe immediately for payment details.",PHISHING|SCAM
+"Download bank statement statement_2026.apk on your Android phone.",PHISHING|CREDENTIAL_THEFT
+"Unzip urgent_contract.zip.vbs to view the court summons.",THREAT|SCAM
+"Earn ₹5,000 daily by liking YouTube videos and Instagram reels! Telegram task group link.",JOB_SCAM|SCAM
+"Join VIP Telegram Crypto Trading Channel for guaranteed 500% weekly returns.",INVESTMENT_SCAM|SCAM
+"Work from home rating hotel reviews on Google Maps. Pay $30 starter fee.",JOB_SCAM|SCAM
+"Hi team, please find the meeting agenda for tomorrow's standup.",SAFE
+"Can you send me the location on Google Maps?",SAFE
+"Thanks for sending the document, I will review it shortly.",SAFE
+"Official portal https://www.india.gov.in",SAFE
+"Check weather report on https://weather.com",SAFE
+"Here is the recipe link https://allrecipes.com",SAFE

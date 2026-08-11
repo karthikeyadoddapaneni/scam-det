@@ -143,6 +143,19 @@ class SafeguardPredictor:
                 ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.75)
             elif ind["id"] == "BANK_IMPERSONATION":
                 ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.65)
+            elif ind["id"] == "DIGITAL_ARREST_LEGAL":
+                ml_probs["THREAT"] = max(ml_probs.get("THREAT", 0.0), 0.90)
+                ml_probs["FINANCIAL_COERCION"] = max(ml_probs.get("FINANCIAL_COERCION", 0.85), 0.85)
+                ml_probs["BLACKMAIL"] = max(ml_probs.get("BLACKMAIL", 0.80), 0.80)
+            elif ind["id"] == "HIGH_RISK_PHONE_COUNTRY":
+                ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.85)
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.75)
+            elif ind["id"] == "QR_PAYMENT_RECEIVE_SCAM":
+                ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.90)
+                ml_probs["CREDENTIAL_THEFT"] = max(ml_probs.get("CREDENTIAL_THEFT", 0.0), 0.85)
+            elif ind["id"] == "DOUBLE_FILE_EXT_MALWARE":
+                ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.95)
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.90)
 
         # Evaluate threat probabilities vs SAFE
         threat_probs = {k: v for k, v in ml_probs.items() if k != "SAFE"}
