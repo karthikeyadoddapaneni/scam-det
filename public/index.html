@@ -393,28 +393,45 @@
             btnText.style.display = 'none';
             spinner.style.display = 'block';
 
-            try {
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
-                
-                const data = await response.json();
+            const endpoints = ['/api/analyze', '/.netlify/functions/api'];
+            let data = null;
+            let lastErr = null;
 
-                if (data.status === 'success') {
-                    renderResults(data.result);
-                } else {
-                    alert('Error analyzing content: ' + (data.message || 'Unknown error'));
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text })
+                    });
+                    
+                    const textResp = await response.text();
+                    if (textResp.trim().startsWith('<')) {
+                        continue; // HTML fallback received, try next endpoint
+                    }
+                    
+                    data = JSON.parse(textResp);
+                    if (data && data.status) {
+                        break;
+                    }
+                } catch (err) {
+                    lastErr = err;
                 }
-            } catch (err) {
-                console.error(err);
-                alert('Network error communicating with SafeGuard AI backend.');
-            } finally {
-                btnText.style.display = 'inline';
-                spinner.style.display = 'none';
+            }
+
+            btnText.style.display = 'inline';
+            spinner.style.display = 'none';
+
+            if (data && data.status === 'success') {
+                renderResults(data.result);
+            } else if (data && data.message) {
+                alert('Error analyzing content: ' + data.message);
+            } else {
+                console.error(lastErr);
+                alert('Error communicating with SafeGuard AI backend. Please check Netlify Functions log.');
             }
         }
+
 
         function renderResults(res) {
             document.getElementById('placeholderCard').style.display = 'none';

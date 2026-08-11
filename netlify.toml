@@ -2,18 +2,11 @@
   publish = "public"
   functions = "netlify/functions"
 
-[functions]
-  node_bundler = "esbuild"
-
 [[redirects]]
-  from = "/api/analyze"
+  from = "/api/*"
   to = "/.netlify/functions/api"
   status = 200
-
-[[redirects]]
-  from = "/api/health"
-  to = "/.netlify/functions/api"
-  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
