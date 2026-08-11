@@ -9,6 +9,7 @@ from typing import Dict, List, Any
 
 from src.preprocessing import clean_text
 from src.feature_extraction import extract_heuristic_indicators, ALL_CATEGORIES
+from src.url_analyzer import analyze_urls_in_text
 from src.train import train_and_evaluate_models
 
 
@@ -45,9 +46,10 @@ class SafeguardPredictor:
         self.mlb = joblib.load(mlb_path)
 
 
-    def predict(self, text: str, threshold: float = 0.30) -> Dict[str, Any]:
+    def predict(self, text: str, threshold: float = 0.30, url_analysis: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Executes end-to-end multi-label threat detection and risk scoring.
+        Executes end-to-end multi-label threat detection and risk scoring,
+        combining NLP model probabilities, text heuristics, and URL security intelligence.
         """
         if not text or not text.strip():
             return self._empty_response()
@@ -71,9 +73,48 @@ class SafeguardPredictor:
                 prob = float(estimator.predict(X_vec)[0])
             ml_probs[cls_name] = round(float(prob), 4)
 
-        # 3. Heuristic Indicator Detection
+        # 3. Static URL Analysis Integration
+        if url_analysis is None:
+            url_analysis = analyze_urls_in_text(text)
+
+        url_risk_weight_sum = 0.0
+        has_malware_url = False
+        has_phishing_url = False
+
+        for url_info in url_analysis:
+            risk_w = url_info.get("risk_weight", 0.0)
+            url_risk_weight_sum += risk_w
+            
+            if url_info.get("has_malware_ext"):
+                has_malware_url = True
+                ml_probs["SCAM"] = max(ml_probs.get("SCAM", 0.0), 0.88)
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.80)
+            
+            if url_info.get("is_ip") or "CREDENTIAL_PHISHING" in url_info.get("threat_tags", []):
+                has_phishing_url = True
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.85)
+                ml_probs["CREDENTIAL_THEFT"] = max(ml_probs.get("CREDENTIAL_THEFT", 0.0), 0.80)
+                
+            if "HIGH_RISK_TLD" in url_info.get("threat_tags", []) or "URL_SHORTENER" in url_info.get("threat_tags", []):
+                ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.65)
+
+        # 4. Heuristic Indicator Detection
         indicators = extract_heuristic_indicators(text)
-        indicator_weight_sum = sum(ind["weight"] for ind in indicators)
+        
+        # Add URL specific indicators to detected_indicators list if URLs are suspicious
+        for url_info in url_analysis:
+            if url_info.get("suspicious"):
+                for url_ind in url_info.get("indicators", []):
+                    if not any(i.get("name") == f"URL Anomaly: {url_ind}" for i in indicators):
+                        indicators.append({
+                            "id": "URL_ANOMALY",
+                            "name": f"URL Anomaly",
+                            "explanation": url_ind,
+                            "weight": round(url_info.get("risk_weight", 1.5) / max(len(url_info.get("indicators", [1])), 1), 2),
+                            "matched_snippets": [url_info.get("url")]
+                        })
+
+        indicator_weight_sum = sum(ind["weight"] for ind in indicators) + url_risk_weight_sum
         
         # Boost specific categories based on strong heuristic rules
         for ind in indicators:
@@ -97,11 +138,11 @@ class SafeguardPredictor:
             elif ind["id"] == "BANK_IMPERSONATION":
                 ml_probs["PHISHING"] = max(ml_probs.get("PHISHING", 0.0), 0.65)
 
-        # Remove SAFE from active threat consideration if threat score exists
+        # Evaluate threat probabilities vs SAFE
         threat_probs = {k: v for k, v in ml_probs.items() if k != "SAFE"}
         max_threat_prob = max(threat_probs.values()) if threat_probs else 0.0
 
-        # Filter categories meeting confidence threshold
+        # Determine active threat categories above confidence threshold
         active_categories = []
         for cat_name, prob in threat_probs.items():
             if prob >= threshold:
@@ -114,36 +155,46 @@ class SafeguardPredictor:
         # Sort by confidence descending
         active_categories.sort(key=lambda x: x["confidence"], reverse=True)
         
-        # If no threat categories detected above threshold, set SAFE
-        if not active_categories:
-            active_categories.append({
+        # If no threat indicators exist or all URLs are verified clean with zero text threat indicators, force SAFE
+        all_urls_clean = (len(url_analysis) > 0) and all(u.get("risk_weight", 0.0) == 0.0 for u in url_analysis)
+        no_text_indicators = len([i for i in indicators if i.get("id") != "SUSPICIOUS_URL"]) == 0
+        
+        if not active_categories or (all_urls_clean and no_text_indicators) or (ml_probs.get("SAFE", 0.0) >= 0.70 and max_threat_prob < 0.50 and indicator_weight_sum < 1.0):
+            is_safe = True
+            active_categories = [{
                 "category": "SAFE",
-                "confidence": round(ml_probs.get("SAFE", 0.95) * 100, 1),
-                "raw_prob": ml_probs.get("SAFE", 0.95)
-            })
+                "confidence": round(max(ml_probs.get("SAFE", 0.95), 0.95) * 100, 1),
+                "raw_prob": max(ml_probs.get("SAFE", 0.95), 0.95)
+            }]
 
-        # 4. Composite Risk Score Calculation (0 - 100)
+        # 5. Composite Risk Score Calculation (0 - 100)
         if active_categories[0]["category"] == "SAFE":
-            raw_risk = max(10 * indicator_weight_sum, 5.0)
+            if indicator_weight_sum < 0.5:
+                raw_risk = 0.0
+            else:
+                raw_risk = 8.0 * indicator_weight_sum
         else:
-            base_risk = max_threat_prob * 60.0
-            indicator_bonus = indicator_weight_sum * 8.0
+            base_risk = max_threat_prob * 55.0
+            indicator_bonus = indicator_weight_sum * 6.0
             severity_bonus = 0.0
             
             # Severity multipliers for severe threats
             primary_cat = active_categories[0]["category"]
             if primary_cat in ["BLACKMAIL", "THREAT"]:
-                severity_bonus = 20.0
+                severity_bonus = 25.0
             elif primary_cat in ["CREDENTIAL_THEFT", "PHISHING", "FINANCIAL_COERCION"]:
-                severity_bonus = 15.0
+                severity_bonus = 20.0
             elif primary_cat in ["SCAM", "INVESTMENT_SCAM", "JOB_SCAM"]:
-                severity_bonus = 10.0
+                severity_bonus = 15.0
+
+            if has_malware_url or has_phishing_url:
+                severity_bonus += 20.0
                 
             raw_risk = base_risk + indicator_bonus + severity_bonus
 
         risk_score = int(min(max(round(raw_risk), 0), 100))
 
-        # 5. Risk Level Classification
+        # 6. Risk Level Classification
         if risk_score <= 25:
             risk_level = "🟢 LOW RISK"
             risk_color = "#28a745"

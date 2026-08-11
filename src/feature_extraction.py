@@ -26,7 +26,7 @@ INDICATOR_RULES = [
     {
         "id": "URGENCY",
         "name": "High Urgency / Pressure Language",
-        "regex": r"\b(immediately|urgent|urgently|within 24 hours|today|expires|asap|now|deactivated today|account blocked|final notice)\b",
+        "regex": r"\b(immediately|urgent|urgently|within 24 hours|action required today|expires today|deactivated today|account blocked|final notice|act now|do it now|asap|time sensitive)\b",
         "weight": 1.5,
         "explanation": "Pushes victim to act rapidly without verifying facts."
     },
@@ -89,9 +89,9 @@ INDICATOR_RULES = [
     {
         "id": "SUSPICIOUS_URL",
         "name": "Suspicious Link / Domain Structure",
-        "regex": r"(https?://\S+|www\.\S+|bit\.ly|tinyurl|\.xyz|\.top|\.ml|\.info|\.site|\.online|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})",
-        "weight": 1.5,
-        "explanation": "Contains links pointing to unverified, shortened, or non-standard domains."
+        "regex": r"(bit\.ly|tinyurl|\.xyz|\.top|\.ml|\.info|\.site|\.online|\.ru|\.cc|\.work|\.click|\.tk|\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b|http://|\.exe|\.apk|\.scr|\.bat|\.vbs|\.zip|\.msi)",
+        "weight": 2.0,
+        "explanation": "Contains links pointing to unverified, shortened, unencrypted HTTP, or non-standard domains."
     }
 ]
 

@@ -58,3 +58,20 @@ text,categories
 "Get paid $300 daily for evaluating local stores! Buy $50 evaluation starter kit now.",JOB_SCAM|SCAM
 "If you don't send the money by 5 PM, consequences will be severe for you and your family.",THREAT|FINANCIAL_COERCION
 "Don't worry, the project delivery deadline has been extended to next Monday.",SAFE
+"Hello how are you doing today",SAFE
+"Hey, hope you are doing well today. Let me know when you are available.",SAFE
+"Hi there, how was your day today?",SAFE
+"Can you call me now if you have a minute?",SAFE
+"What time are we meeting today?",SAFE
+"Good morning! Have a great day today.",SAFE
+"Thank you for your help today.",SAFE
+"See you later today!",SAFE
+"Let me know if you need any help with your assignment.",SAFE
+"Happy birthday! Hope you have a wonderful day.",SAFE
+"Critical software patch: download update now from http://suspicious-malware-site.xyz/download.exe",PHISHING|SCAM
+"Security alert: download account fix tool http://192.168.1.1/setup.exe",PHISHING|CREDENTIAL_THEFT
+"Check out this link https://google.com",SAFE
+"Here is the documentation page https://github.com/project",SAFE
+"Read more on Wikipedia https://en.wikipedia.org/wiki/Main_Page",SAFE
+"You can search for it on https://bing.com",SAFE
+"Watch the video tutorial at https://youtube.com",SAFE

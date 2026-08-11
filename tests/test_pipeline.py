@@ -44,6 +44,20 @@ class TestSafeguardPipeline(unittest.TestCase):
         categories = [c["category"] for c in res["predicted_categories"]]
         self.assertTrue("BLACKMAIL" in categories or "FINANCIAL_COERCION" in categories or "THREAT" in categories)
 
+    def test_malware_url_detection(self):
+        predictor = SafeguardPredictor()
+        malware_url_msg = "http://suspicious-malware-site.xyz/download.exe"
+        res = predictor.predict(malware_url_msg)
+        self.assertGreaterEqual(res["risk_score"], 80)
+        self.assertNotEqual(res["predicted_categories"][0]["category"], "SAFE")
+
+    def test_safe_message_zero_risk(self):
+        predictor = SafeguardPredictor()
+        safe_msg = "Hello how are you doing today"
+        res = predictor.predict(safe_msg)
+        self.assertEqual(res["risk_score"], 0)
+        self.assertEqual(res["predicted_categories"][0]["category"], "SAFE")
+
     def test_database_logging(self):
         test_db = "test_safeguard_temp.db"
         if os.path.exists(test_db):
