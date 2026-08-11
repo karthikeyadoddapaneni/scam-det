@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.streamlit/
+*.db
+*.sqlite
+.env
+venv/
+env/
+.ipynb_checkpoints/
+results/*.png
+results/*.csv
