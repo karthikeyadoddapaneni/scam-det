@@ -592,7 +592,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    err_msg = str(e)
+    print(f"Error caught by global handler: {err_msg}\n{traceback.format_exc()}")
+    return jsonify({
+        "status": "error",
+        "message": err_msg
+    }), 500
+
+
 @app.route("/", methods=["GET"])
+@app.route("/api/index", methods=["GET"])
+@app.route("/api/index.py", methods=["GET"])
 def home():
     """Renders SafeGuard AI web interface."""
     return render_template_string(HTML_TEMPLATE)
@@ -600,6 +613,7 @@ def home():
 
 @app.route("/api/health", methods=["GET"])
 def health():
+
     """API health status endpoint."""
     return jsonify({
         "status": "online",

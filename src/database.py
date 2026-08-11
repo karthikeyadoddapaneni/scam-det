@@ -8,14 +8,20 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, List, Any
 
-DB_PATH = "safeguard_ai.db"
+if os.environ.get("VERCEL") or not os.access(".", os.W_OK):
+    DB_PATH = "/tmp/safeguard_ai.db"
+else:
+    DB_PATH = "safeguard_ai.db"
 
 
-def get_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
+def get_connection(db_path: str = None) -> sqlite3.Connection:
     """Returns a SQLite connection with dict row factory."""
+    if db_path is None:
+        db_path = DB_PATH
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 
 def init_db(db_path: str = DB_PATH):

@@ -14,8 +14,17 @@ from src.train import train_and_evaluate_models
 
 class SafeguardPredictor:
     def __init__(self, model_dir: str = "models", data_path: str = "data/demo_dataset.csv"):
-        self.model_dir = model_dir
-        self.data_path = data_path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if not os.path.isabs(model_dir):
+            self.model_dir = os.path.join(base_dir, model_dir)
+        else:
+            self.model_dir = model_dir
+            
+        if not os.path.isabs(data_path):
+            self.data_path = os.path.join(base_dir, data_path)
+        else:
+            self.data_path = data_path
+
         self.model = None
         self.vectorizer = None
         self.mlb = None
@@ -34,6 +43,7 @@ class SafeguardPredictor:
         self.model = joblib.load(model_path)
         self.vectorizer = joblib.load(vec_path)
         self.mlb = joblib.load(mlb_path)
+
 
     def predict(self, text: str, threshold: float = 0.30) -> Dict[str, Any]:
         """
